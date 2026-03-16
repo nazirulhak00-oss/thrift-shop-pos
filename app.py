@@ -121,25 +121,43 @@ def connect_to_sheets():
         return None
 
 # ===== ฟังก์ชันโหลดข้อมูล Categories =====
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)
 def load_categories(_sheet):
     """โหลดหมวดหมู่สินค้า"""
     try:
         worksheet = _sheet.worksheet("Categories")
-        data = worksheet.get_all_records()
-        return pd.DataFrame(data)
-    except:
+        data = worksheet.get_all_values()
+        
+        if len(data) <= 1:
+            st.warning("⚠️ Sheet 'Categories' ไม่มีข้อมูล (มีแค่ header)")
+            return pd.DataFrame()
+        
+        # แปลงเป็น DataFrame
+        df = pd.DataFrame(data[1:], columns=data[0])
+        return df
+    except Exception as e:
+        st.error(f"❌ โหลด Categories ไม่สำเร็จ: {e}")
+        st.info("💡 กรุณาตรวจสอบว่ามี Sheet ชื่อ 'Categories' ใน Google Sheets")
         return pd.DataFrame()
 
 # ===== ฟังก์ชันโหลดข้อมูล Brands =====
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)
 def load_brands(_sheet):
     """โหลดแบรนด์"""
     try:
         worksheet = _sheet.worksheet("Brands")
-        data = worksheet.get_all_records()
-        return pd.DataFrame(data)
-    except:
+        data = worksheet.get_all_values()
+        
+        if len(data) <= 1:
+            st.warning("⚠️ Sheet 'Brands' ไม่มีข้อมูล (มีแค่ header)")
+            return pd.DataFrame()
+        
+        # แปลงเป็น DataFrame
+        df = pd.DataFrame(data[1:], columns=data[0])
+        return df
+    except Exception as e:
+        st.error(f"❌ โหลด Brands ไม่สำเร็จ: {e}")
+        st.info("💡 กรุณาตรวจสอบว่ามี Sheet ชื่อ 'Brands' ใน Google Sheets")
         return pd.DataFrame()
 
 # ===== ฟังก์ชันสร้างรหัสบาร์โค้ดอัจฉริยะ =====
@@ -433,6 +451,13 @@ def main():
             ["🏠 Dashboard", "📦 รับของเข้าสต็อก", "🛒 จุดขายสินค้า", "🔍 ค้นหาสินค้า"],
             label_visibility="collapsed"
         )
+        
+        st.markdown("---")
+        
+        # ปุ่ม Clear Cache
+        if st.button("🔄 Refresh Data", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
         
         st.markdown("---")
         st.markdown("""
